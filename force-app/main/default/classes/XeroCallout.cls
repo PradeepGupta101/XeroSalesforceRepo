@@ -1,4 +1,24 @@
 public with sharing class XeroCallout {
+    public static String getXeroData(HttpRequest request,String resource){
+        try{
+            HttpResponse response = new Http().send(request);
+            
+            Map<String,Object> responseMap = new Map<String,Object>();
+            
+            if(response.getStatusCode() != 200){
+                throw new XeroException('Status Code '+response.getStatusCode()+' Error Occured! '+response.getBody());
+            }
+            else{
+                responseMap = (Map<String,Object>)JSON.deserializeUntyped(response.getBody());
+                return createResponse(responseMap.get(resource),null,200);
+            }
+        }
+        catch(XeroException ex){
+            System.debug('An Error Occurred! '+ex.getMessage());
+            return createResponse(null,ex.getMessage(),400);
+        }
+    }
+
     public static String createResponse(Object data,String err,Integer status){
         Map<String,Object> responseMap = new Map<String,Object>();
         responseMap.put('data', data);
@@ -37,26 +57,6 @@ public with sharing class XeroCallout {
         catch(Exception ex){
          	System.debug('Error ' + ex.getMessage());
             return '0';
-        }
-    }
-    
-    public static String getXeroData(HttpRequest request,String resource){
-        try{
-            HttpResponse response = new Http().send(request);
-            
-            Map<String,Object> responseMap = new Map<String,Object>();
-            
-            if(response.getStatusCode() != 200){
-                throw new XeroException('Status Code '+response.getStatusCode()+' Error Occured! '+response.getBody());
-            }
-            else{
-                responseMap = (Map<String,Object>)JSON.deserializeUntyped(response.getBody());
-                return createResponse(responseMap.get(resource),null,200);
-            }
-        }
-        catch(XeroException ex){
-            System.debug('An Error Occurred! '+ex.getMessage());
-            return createResponse(null,ex.getMessage(),400);
         }
     }
 

@@ -28,7 +28,7 @@ public with sharing class XeroOrchestrator {
 		  }    
     }
     
-    public static void connectToXero(String resource){
+    public static String connectToXero(String resource){
       if(checkForPermission()){
         String tenantId = XeroCallout.getTenantId(resource);
           if(tenantId != '0'){
@@ -36,17 +36,21 @@ public with sharing class XeroOrchestrator {
               Map<String,Object> data = (Map<String,Object>)JSON.deserializeUntyped(XeroCallout.getXeroData(request,resource)); 
               if(data.get('status')!= 200){
                 System.debug(data.get('err'));
+                return (String)data.get('err');
               }
               else{
                 System.debug(data.get('data'));
-              }            
+                return 'Data Present';
+              }
           }
           else{
               System.debug('There was some problem in retriving the Tenant Id');
+              return 'There was some problem in retriving the Tenant Id';
           }
       }
       else{
         System.debug('User does not have sufficiant access!');
+        return 'User does not have sufficiant access!';
       }
     }
 }
