@@ -1,6 +1,18 @@
 public with sharing class XeroOrchestrator {
     
     public static String tenantId = '';
+
+    public static HttpRequest constructRequest(String method, String resource,String tenantId){
+      HttpRequest request = new HttpRequest();
+      
+      request.setMethod(method);
+      request.setEndpoint('callout:XeroCredentials/api.xro/2.0/'+resource);
+      request.setTimeout(120000);
+      request.setHeader('Accept', 'application/json');
+      request.setHeader('xero-tenant-id', tenantId);
+      
+      return request;
+    }
     
     public static Boolean checkForPermission(){    
       User u = [select Id, username,Name from User where Id = :UserInfo.getUserId()];
@@ -15,48 +27,27 @@ public with sharing class XeroOrchestrator {
     	  return false;
 		  }    
     }
-        
-    public static void getContacts(){
-        if(checkForPermission()){
-          String tenantId = XeroCallout.getTenantId('Contacts');
-            if(tenantId != '0'){
-                Map<String,Object> data = (Map<String,Object>)JSON.deserializeUntyped(XeroCallout.getXeroData('GET','Contacts',tenantId)); 
-                if(data.get('status')!= 200){
-                  System.debug(data.get('err'));
-                }
-                else{
-                  System.debug(data.get('data'));
-                }            
-            }
-            else{
-                System.debug('There was some problem in retriving the Tenant Id');
-            }
-        }
-        else{
-          System.debug('User does not have sufficiant access!');
-        }
-    }
     
-    
-    public static void getInvoices(){
-        if(checkForPermission()){
-          String tenantId = XeroCallout.getTenantId('Invoices');
-            if(tenantId != '1'){
-              Map<String,Object> data = (Map<String,Object>)JSON.deserializeUntyped(XeroCallout.getXeroData('GET','Invoices',tenantId)); 
+    public static void connectToXero(String resource){
+      if(checkForPermission()){
+        String tenantId = XeroCallout.getTenantId(resource);
+          if(tenantId != '0'){
+              HttpRequest request = constructRequest('GET', resource, tenantId);
+              Map<String,Object> data = (Map<String,Object>)JSON.deserializeUntyped(XeroCallout.getXeroData(request,resource)); 
               if(data.get('status')!= 200){
                 System.debug(data.get('err'));
               }
               else{
                 System.debug(data.get('data'));
-              }    
-            }
-            else{
-                System.debug('There was some problem in retriving the Tenant Id');
-            }
-        }
-        else{
-          System.debug('User does not have sufficiant access!');
-        }
+              }            
+          }
+          else{
+              System.debug('There was some problem in retriving the Tenant Id');
+          }
+      }
+      else{
+        System.debug('User does not have sufficiant access!');
+      }
     }
 }
 
