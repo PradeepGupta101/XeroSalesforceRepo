@@ -24,11 +24,11 @@ public with sharing class XeroOrchestrator {
 
       //Variable assignment - Permission Set Names
       String readPermission = 'Xero_Integration_Read';
-      String writePermission = 'Xero_Integration_Write';
+      String editPermission = 'Xero_Integration_Edit';
 
       //Getting permission set Ids. 
       //Getting permission set details in a set.
-      Set<String> permissions = new Set<String>{[SELECT Id FROM PermissionSet WHERE Name =:readPermission].Id,[SELECT Id, Name FROM PermissionSet WHERE Name = :writePermission].Id};
+      Set<String> permissions = new Set<String>{[SELECT Id FROM PermissionSet WHERE Name =:readPermission].Id,[SELECT Id FROM PermissionSet WHERE Name =:editPermission].Id};
       
 		  try{
         //If query returns something, which means user has permission set assigned. Return true in that case.
