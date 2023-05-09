@@ -13,7 +13,11 @@ global with sharing class RequestResponseProcessor {
         }  
         return instance;
     }
-
+	
+    global static RequestResponseProcessor.ReqResLogger getLogger(Type cls){
+        return new RequestResponseProcessor.ReqResLogger(cls);
+    }
+    
    //-------------Creation of log records----------
     global void createRequestLog(List<RequestResponseLogEvent__e> logEvents){
         List<RequestResponse_Log__c> logs = new List<RequestResponse_Log__c>();
@@ -70,7 +74,28 @@ global with sharing class RequestResponseProcessor {
         }
     }
     
-    global void asyncLog(String request, String response, String ctxId){
+    //-----------Interface
+    global interface RequestResponseLogger {
+       void debug(String request, String response);
+       void debug(String request, String response, String ctxId);
+    }
+    
+    global class ReqResLogger implements RequestResponseLogger{
+    	
+        private String loggingClass;
+        public ReqResLogger(Type cls){
+			this.loggingClass = cls.getName();
+            system.debug(loggingClass);
+        } 
+	        
+        public void debug(String request, String response){
+            debug(request, response, null);	
+        }
+        public void debug(String request, String response, String ctxId){
+            asyncLog(request, response, ctxId);
+        }
+        
+    	global void asyncLog(String request, String response, String ctxId){
             RequestResponseLogEvent__e e = new RequestResponseLogEvent__e(RequestBody__c = request,
                 														  ResponseBody__c = response,
                 														  ContextId__c = ctxId,
@@ -78,4 +103,5 @@ global with sharing class RequestResponseProcessor {
             RequestResponseProcessor.getinstance().queueEvent(e);
             
         } 
+    }
 }
