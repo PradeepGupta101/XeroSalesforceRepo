@@ -57,6 +57,22 @@ private class BlueLogTests {
         System.assertEquals(bl.ClassMethod__c, 'BlueLogTests.testLoggingError');        
     }
     
+    class MockLogException extends Exception{}
+    
+    @isTest
+    static void testLoggingEx(){
+        Test.startTest();
+            BlueLogProcessor.IBlueLogger ibl = BlueLogProcessor.getLogger(BlueLogTests.class);
+        
+	        //errors will auto flush the logs
+            ibl.error(new MockLogException('TestLoggingEx'), 'testLoggingEx');
+        Test.stopTest();
+        Blue_Log__c bl = [SELECT Id, Name, Message__c, LogLevel__c, ClassMethod__c, ContextId__c
+                         FROM Blue_Log__c LIMIT 1];
+        System.assert(bl.Message__c.contains('Exception'), 'No literal "Exception found in log"');
+        System.assertEquals(bl.LogLevel__c, 'ERROR');
+        System.assertEquals(bl.ClassMethod__c, 'BlueLogTests.testLoggingEx');        
+    }
     @isTest
     static void testLotsOfLogs(){
         Test.startTest();

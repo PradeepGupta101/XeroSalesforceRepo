@@ -54,6 +54,8 @@ global without sharing class BlueLogProcessor {
        void debug(String message, String classMethod, String ctxId);
        void error(String message, String classMethod);
        void error(String message, String classMethod, String ctxId);
+       void error(Exception ex, String classMethod);
+       void error(Exception ex, String classMethod, String ctxId);
     }
     
     global class BlueLogger implements IBlueLogger{
@@ -75,8 +77,30 @@ global without sharing class BlueLogProcessor {
         public void error(String message, String classMethod, String ctxId){
             asyncLog(message, classMethod, LoggingLevel.ERROR, ctxId);            
         }
+          
+        //All exceptions to be logged as errors 
+        public void error(Exception ex, String classMethod){
+            error(ex, classMethod, null);
+        }
+        public void error(Exception ex, String classMethod, String ctxId){
+            asyncLog(ex, classMethod, ctxId);            
+        }
+
+        private void asyncLog(Exception ex, String classMethod, String ctxId){
+            String exText =  'Exception: [' + ex.getTypeName() + ']:'
+								+ '[' + ex.getLineNumber() + ']'
+                				+ ':' + ex.getMessage()
+                				+ '\n'
+								+ 'Trace: ' + ex.getStackTraceString();
             
+            asyncLog(exText, classMethod, LoggingLevel.error, ctxId, true);
+        }
+        
         private void asyncLog(String message, String classMethod, System.LoggingLevel logLevel, String ctxId){
+            asyncLog(message, classMethod, logLevel, ctxId, false);
+        }
+	
+        private void asyncLog(String message, String classMethod, System.LoggingLevel logLevel, String ctxId, Boolean immediate){
             Blue_Log_Event__e e = new Blue_Log_Event__e(
             	Message__c = message,
                 LogLevel__c = logLevel.name(),
@@ -85,6 +109,9 @@ global without sharing class BlueLogProcessor {
                 Log_Timestamp__c = System.now()
             );
             BlueLogProcessor.getInstance().queueEvent(e);
+            if(immediate){
+                BlueLogProcessor.getInstance().forceFlush();
+            }
         }
     }
 }
