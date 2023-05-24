@@ -1,16 +1,15 @@
-public with sharing class ContactWrapper{
-
-    public String ContactNumber; // Identify Contact in External System
-	public String Name;         // Full name of contact/organisation
+public with sharing class ContactWrapper{	
+    public String Name;         // Full name of contact/organisation
 	public String FirstName;
 	public String LastName;
 	public String EmailAddress;
+	public String Phone;
 	
     public ContactWrapper(Contact record) {
-        this.ContactNumber = record.ID;
-        this.Name = record.Name;
+        this.Name = record.FirstName +' '+ record.LastName;
         this.FirstName = record.FirstName;
         this.LastName = record.LastName;
         this.EmailAddress = record.Email;
+        this.Phone = record.Phone; 
     }
 }
