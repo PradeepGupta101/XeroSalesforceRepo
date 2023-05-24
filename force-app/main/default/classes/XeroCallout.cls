@@ -10,19 +10,20 @@ public with sharing class XeroCallout {
         try{
             //Send request
             HttpResponse response = new Http().send(request);
-            req.debug('Http Request Sent:'+request,'getXeroData');
+            req.debug('Http Request Sent to Xero:'+request.getEndpoint()+ ' Method :' +request.getMethod(),null);
+                      
             
             Map<String,Object> responseMap = new Map<String,Object>();
             
             //Check if response was successful else, throw an error.
             if(response.getStatusCode() != 200){
-                ibl.debug('Exception occured while sending the request: Status Code'+response.getStatusCode()+ ' Error Occured! '+response.getBody(),'getXeroData');
                 throw new XeroException('Status Code '+ response.getStatusCode() +' Error: '+response.getBody());
     
             }
             else{
                 responseMap = (Map<String,Object>)JSON.deserializeUntyped(response.getBody());
-                req.debug('Response recieved: '+responseMap,'getXeroData');
+                req.debug('Http Request Sent to Xero: '+request.getEndpoint()+ ' Method :' +request.getMethod(), 'Response Recieved Successfully: '+response.getStatusCode());
+                RequestResponseProcessor.getInstance().forceFlush();
                 return createResponse(responseMap.get(resource),null,200);
             }
         }
@@ -31,7 +32,7 @@ public with sharing class XeroCallout {
             ibl.error('Exception occured:'+ex.getMessage(), 'getXeroData');
             ibl.debug('getXeroData method ends', 'getXeroDataRecord');
             BlueLogProcessor.getInstance().forceFlush();
-            RequestResponseProcessor.getInstance().forceFlush();
+            
             return createResponse(null,ex.getMessage(),400);
         }
         //Return the response at the end.
@@ -40,16 +41,11 @@ public with sharing class XeroCallout {
     //Method to create a response object and sending it back to orchestrator
     public static String createResponse(Object data,String err,Integer status){
 
-        RequestResponseProcessor.RequestResponseLogger req = RequestResponseProcessor.getLogger(XeroCallout.class);
-		req.debug('createResponse method start', 'createResponseRecord');
 
         Map<String,Object> responseMap = new Map<String,Object>();
         responseMap.put('data', data);
         responseMap.put('err',err);
         responseMap.put('status',status);
-        
-        req.debug('createResponse method ends', 'createResponseRecord');
-        RequestResponseProcessor.getInstance().forceFlush();
 
         return (String)JSON.serialize(responseMap);
     }
@@ -74,25 +70,24 @@ public with sharing class XeroCallout {
         //Send the request, store the response
         try{
         	HttpResponse response = new Http().send(request);
-            req.debug('Http Request Sent: '+request, 'getTenantId');
-
+            req.debug('Request Sent to fetch Tenant ID: '+request.getEndpoint(), null);
+			
             //Check weather the response was successful.
             if(response.getStatusCode() != 200){
                 System.debug(response);
-                req.debug('Exception Occured','getXeroData');
-                ibl.debug('Exception occured while sending the request:'+response.getStatusCode()+ 'Error' +response.getBody(),'getTenantId');
                 throw new XeroException('Tenant Id Not returned!'); 
             }
             else{
                 //Deserialize the response and return the tenant id value.
                 List<Object> result =  (List<Object>) JSON.deserializeUntyped(response.getBody());
                 Map<String,Object> tempMap = new Map<String,Object>();
-
+				
      		    for(Object obj : result) { 
 	    		    tempMap = (Map<String,Object>)obj; 
+                    req.debug('Request Sent to fetch Tenant ID: '+request.getEndpoint(),'Tenant ID Received :'+tempMap.get('tenantId'));
+                    RequestResponseProcessor.getInstance().forceFlush();
     			    return (String)tempMap.get('tenantId'); 
-			    }
-                req.debug('Response recieved:'+result,'getXeroData');
+			    }                
             }
             //'0' will be returned if response was returned but tenant id was not found.
             return '0';
@@ -100,10 +95,9 @@ public with sharing class XeroCallout {
         catch(Exception ex){
             //Exception will be thrown and again '0' will be returned if there was any error
          	System.debug('Error ' + ex.getMessage());
-            ibl.error('Exception occured:'+ex.getMessage(), 'getXeroData');
+            ibl.error('Exception occured:'+ex.getMessage(), 'getTenantId');
             ibl.debug('getTenantId method ends', 'getTenantId');
             BlueLogProcessor.getInstance().forceFlush();
-            RequestResponseProcessor.getInstance().forceFlush();
             return '0';
         }
         
