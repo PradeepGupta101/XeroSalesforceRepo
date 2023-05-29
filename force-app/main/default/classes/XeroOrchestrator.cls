@@ -103,7 +103,7 @@ public with sharing class XeroOrchestrator {
       }
       else{
         System.debug('User does not have sufficiant access!');
-        ibl.debug('User does not have sufficiant access!', 'connectToXero');
+        ibl.debug('User does not have sufficiant access!', 'retrieveFromXero');
         BlueLogProcessor.getInstance().forceFlush();
         return 'User does not have sufficiant access!';
       }
@@ -115,7 +115,7 @@ public with sharing class XeroOrchestrator {
         ContactWrapper createContact = new ContactWrapper(contactToCreate);
         
       	BlueLogProcessor.IBlueLogger ibl = BlueLogProcessor.getLogger(XeroOrchestrator.class);
-	    ibl.debug('sendToXero method starts', 'sendToXero');
+	ibl.debug('sendToXero method starts', 'sendToXero');
         
         //Check if user has permission
         if(checkForPermission('Edit')){
