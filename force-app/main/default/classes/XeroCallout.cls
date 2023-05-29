@@ -21,6 +21,7 @@ public with sharing class XeroCallout {
     
             }
             else{
+                System.debug(response.getBody());
                 responseMap = (Map<String,Object>)JSON.deserializeUntyped(response.getBody());
                 req.debug('Http Request Sent to Xero: '+request.getEndpoint()+ ' Method :' +request.getMethod(), 'Response Recieved Successfully: '+response.getStatusCode());
                 RequestResponseProcessor.getInstance().forceFlush();
@@ -29,7 +30,7 @@ public with sharing class XeroCallout {
         }
         catch(XeroException ex){
             System.debug('An Error Occurred! '+ex.getMessage());
-            ibl.error('Exception occured:'+ex.getMessage(), 'getXeroData');
+            ibl.error(ex, 'getXeroData');
             ibl.debug('getXeroData method ends', 'getXeroDataRecord');
             BlueLogProcessor.getInstance().forceFlush();
             
@@ -95,7 +96,7 @@ public with sharing class XeroCallout {
         catch(Exception ex){
             //Exception will be thrown and again '0' will be returned if there was any error
          	System.debug('Error ' + ex.getMessage());
-            ibl.error('Exception occured:'+ex.getMessage(), 'getTenantId');
+            ibl.error(ex, 'getTenantId');
             ibl.debug('getTenantId method ends', 'getTenantId');
             BlueLogProcessor.getInstance().forceFlush();
             return '0';

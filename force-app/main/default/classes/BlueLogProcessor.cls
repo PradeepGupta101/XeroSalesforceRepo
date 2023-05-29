@@ -26,7 +26,7 @@ global without sharing class BlueLogProcessor {
                 	LogLevel__c = le.LogLevel__c,
             		ClassMethod__c = le.ClassMethod__c,
                 	Message__c = le.Message__c,
-                	UserId__c = le.UserId__c,
+                	User__c = le.UserId__c,
                 	ContextId__c = le.ContextId__c,
                 	Log_Timestamp__c = le.Log_Timestamp__c
             	));
@@ -52,8 +52,6 @@ global without sharing class BlueLogProcessor {
     global interface IBlueLogger {
        void debug(String message, String classMethod);
        void debug(String message, String classMethod, String ctxId);
-       void error(String message, String classMethod);
-       void error(String message, String classMethod, String ctxId);
        void error(Exception ex, String classMethod);
        void error(Exception ex, String classMethod, String ctxId);
     }
@@ -70,12 +68,6 @@ global without sharing class BlueLogProcessor {
         }
         public void debug(String message, String classMethod, String ctxId){
             asyncLog(message, classMethod, LoggingLevel.DEBUG, ctxId);
-        }
-        public void error(String message, String classMethod){
-            error(message, classMethod, null);            
-        }
-        public void error(String message, String classMethod, String ctxId){
-            asyncLog(message, classMethod, LoggingLevel.ERROR, ctxId);            
         }
           
         //All exceptions to be logged as errors 
@@ -108,6 +100,11 @@ global without sharing class BlueLogProcessor {
                 ContextId__c = ctxId,
                 Log_Timestamp__c = System.now()
             );
+            String userId = UserInfo.getUserId();
+        	if (userId != null) {
+            	e.UserId__c = userId;
+        	} 
+            
             BlueLogProcessor.getInstance().queueEvent(e);
             if(immediate){
                 BlueLogProcessor.getInstance().forceFlush();
