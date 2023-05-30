@@ -18,7 +18,7 @@ public with sharing class XeroCallout {
             }
         }
         catch(XeroException ex){
-            System.debug('An Error Occurred! '+ex.getMessage());
+            System.debug('An Error Occurred! '+ex.getMessage() + 'Stack Trace: ' + ex.getStackTraceString());
             return createResponse(null,ex.getMessage(),400);
         }
         //Return the response at the end.
@@ -52,20 +52,14 @@ public with sharing class XeroCallout {
             //Check weather the response was successful.
             if(response.getStatusCode() != 200){
                 System.debug(response);
-                throw new XeroException('Tenant Id Not returned!');
+                throw new XeroException('Tenant Id Not returned!' + response.getBody());
             }
             else{
                 //Deserialize the response and return the tenant id value.
-                List<Object> result =  (List<Object>) JSON.deserializeUntyped(response.getBody());
-                Map<String,Object> tempMap = new Map<String,Object>();
-
-     		    for(Object obj : result) { 
-	    		    tempMap = (Map<String,Object>)obj; 
-    			    return (String)tempMap.get('tenantId'); 
-			    }
+                List<Object> tokenObject =  (List<Object>) JSON.deserializeUntyped(response.getBody());
+                Map<String,Object> tokenMap = (Map<String,Object>) tokenObject[0];
+                return (String)tokenMap.get('tenantId');
             }
-            //'0' will be returned if response was returned but tenant id was not found.
-            return '0';
         }
         catch(Exception ex){
             //Exception will be thrown and again '0' will be returned if there was any error

@@ -1,56 +1,56 @@
-//Orchestrator class 
+//Orchestrator class.
+//This class construct the request and handle response coming from XeroCallout class. 
 public with sharing class XeroOrchestrator {
-    //Declaring tenantId as global class variable so that it will be accessible within any block.
+    //Declaring tenantId as global variable so that it will be accessible throughout the class.
     public static String tenantId = '';
 
-    //Method to construct 
+    //Method to construct the request. Setting the request parameters and return it for further processing.
     public static HttpRequest constructRequest(String method, String resource,String tenantId){
       HttpRequest request = new HttpRequest();
-      //Construct the request - setting the parameters.
       request.setMethod(method);
       request.setEndpoint('callout:XeroCredentials/api.xro/2.0/'+resource);
       request.setTimeout(120000);
       request.setHeader('Accept', 'application/json');
       request.setHeader('xero-tenant-id', tenantId);
-      //return the request for further processing.
       return request;
     }
     
-    public static Boolean checkForPermission(){  
+    //Method to check if user has required permisions to perform the action
+    public static Boolean checkForPermission(String requiredPermission){  
       //Getting logged in user details 
-      User u = [SELECT Id, username,Name 
-                FROM User 
-                WHERE Id = :UserInfo.getUserId()];
+      User userRecord = [SELECT Id, username,Name 
+                     	 FROM User 
+                		 WHERE Id = :UserInfo.getUserId()];
 
       //Variable assignment - Permission Set Names
-      String readPermission = 'Xero_Integration_Read';
-      String editPermission = 'Xero_Integration_Edit';
-
-      //Getting permission set Ids. 
-      //Getting permission set details in a set.
-      Set<String> permissions = new Set<String>{[SELECT Id FROM PermissionSet WHERE Name =:readPermission].Id,[SELECT Id FROM PermissionSet WHERE Name =:editPermission].Id};
+      	String permission = requiredPermission == 'Read' ? 'Xero_Integration_Read' : 'Xero_Integration_Edit';
+        
+      	List<PermissionSet> permissionSets = [SELECT Id FROM PermissionSet WHERE Name = :permission];
       
-		  try{
-        //If query returns something, which means user has permission set assigned. Return true in that case.
-			  PermissionSetAssignment pId = [SELECT Id FROM PermissionSetAssignment WHERE AssigneeId =: u.Id AND PermissionSetId IN :permissions];
-			  return true;
-		  }
-		  catch(QueryException ex){
-        //else the flow moves into the exception and returns false.
-    	  return false;
-		  }    
+		try{
+        	//If query returns something, which means user has permission set assigned. Return true in that case.
+			List<PermissionSetAssignment> permissionSetIds = [SELECT Id FROM PermissionSetAssignment WHERE AssigneeId =: userRecord.Id AND PermissionSetId = :permissionSets[0].Id];
+        	return permissionSetIds.size() != 0 ? true : false;
+		}
+		catch(QueryException ex){
+        	//else the flow moves into the exception and returns false.
+    	  	return false;
+		}    
     }
     
-    //Method of orchestration.
-    public static String connectToXero(String resource){
+    
+    
+    //Method to retrieve the records from xero platform.
+    public static String connectToXero(String resource,String filter){
       //Check if user has permission
-      if(checkForPermission()){
+      if(checkForPermission('Read')){
         //Fetch Tenant Id
         String tenantId = XeroCallout.getTenantId(resource);
           //Check if tenant id is returned, return and print an error instead.
           if(tenantId != '0'){
+              String resourceTobeSent = filter.length() > 0 ? resource+'/'+filter : resource;
               //Construct the request with parameters.
-              HttpRequest request = constructRequest('GET', resource, tenantId);
+              HttpRequest request = constructRequest('GET', resourceTobeSent, tenantId);
               //Send request to callout method, deserialize the response and assign it to a variable called data.
               Map<String,Object> data = (Map<String,Object>)JSON.deserializeUntyped(XeroCallout.getXeroData(request,resource)); 
               //Check weather the response is successful or not, print and return either details.
@@ -74,11 +74,3 @@ public with sharing class XeroOrchestrator {
       }
     }
 }
-
-
-//Once response is recieved: Perform the following actions
-//List<Object> listOfContacts = (List<Object>) data;
-//for(Object contact: listOfContacts){
-//	Map<String,Object> contacts = (Map<String,Object>) contact;
-//	System.debug(contacts.get('Name'));
-//}
