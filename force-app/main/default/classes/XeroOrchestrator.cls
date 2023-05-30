@@ -103,32 +103,39 @@ public with sharing class XeroOrchestrator {
       }
       else{
         System.debug('User does not have sufficiant access!');
-        ibl.debug('User does not have sufficiant access!', 'retrieveFromXero');
+        ibl.debug('User does not have sufficiant access!', 'connectToXero');
         BlueLogProcessor.getInstance().forceFlush();
         return 'User does not have sufficiant access!';
       }
     }
-   
+    
     // Method to Send Data from Salesforce to Xero
-    public static String sendToXero(Contact contactToCreate){
-      	String resource = 'Contact';
-        ContactWrapper createContact = new ContactWrapper(contactToCreate);
-        
-      	BlueLogProcessor.IBlueLogger ibl = BlueLogProcessor.getLogger(XeroOrchestrator.class);
-	ibl.debug('sendToXero method starts', 'sendToXero');
+    public static String sendToXero(String resource, Contact contact){
+        Object wrapperData;
+        BlueLogProcessor.IBlueLogger ibl = BlueLogProcessor.getLogger(XeroOrchestrator.class);
+	      ibl.debug('sendToXero method starts', 'sendToXero');
         
         //Check if user has permission
         if(checkForPermission('Edit')){
       		//Fetch Tenant Id
       		String tenantId = XeroCallout.getTenantId(resource);
-      		//Convert Contact to JSON string
-      		String contactJson = JSON.serialize(createContact);
-      		System.debug(contactJson);
+        	if(resource == 'Contact'){
+        			ContactWrapper createContact = new ContactWrapper(contact);
+                	String contactToJson = JSON.serialize(createContact);
+                	wrapperData = JSON.deserialize(contactToJson, ContactWrapper.class);
+        	}
+        	else if(resource == 'Invoice'){
+            		InvoiceWrapper createInvoice = new InvoiceWrapper(contact);
+                	String invoiceToJson = JSON.serialize(createInvoice);
+                	System.debug(invoiceToJson);
+                	wrapperData = JSON.deserialize(invoiceToJson, InvoiceWrapper.class);
+        	}
+          else{
+                 System.debug('Incorrect Resource Name.');
+          }
       		if(tenantId != '0'){
-          		Object contactWrapperData = JSON.deserialize(contactJson, ContactWrapper.class);
-
           		//Construct the request with parameters.
-          		HttpRequest request = constructRequest('POST', resource, tenantId, JSON.serialize(contactWrapperData));
+          		HttpRequest request = constructRequest('POST', resource, tenantId, JSON.serialize(wrapperData));
           		//Send request to callout method, deserialize the response and assign it to a variable called data.
           		Map<String,Object> data = (Map<String,Object>)JSON.deserializeUntyped(XeroCallout.getXeroData(request,resource)); 
  
@@ -153,7 +160,7 @@ public with sharing class XeroOrchestrator {
         BlueLogProcessor.getInstance().forceFlush();
         return 'User does not have sufficiant access!';
       }
-    } 
+    }
 }
 
 

@@ -11,18 +11,19 @@ public with sharing class ContactWrapper{
     public List<Phone> Phones;
 	
     public class Address{
-         public String City;
-         public String Region;
-         public String PostalCode;
-         public String Country;
+         public String mailingCity;
+         public String mailingRegion;
+         public String mailingPostalCode;
+         public String mailingCountry;
          public String AddressType;
+
         
-        public Address(Contact contact, String AddressType) {
-            this.AddressType = AddressType;
-            this.City = contact.MailingCity;
-            this.Region = contact.MailingState;
-            this.PostalCode = contact.MailingPostalCode;
-            this.Country = contact.MailingCountry;
+        public Address(Contact contact) {
+            this.AddressType = 'STREET';
+            this.mailingCity = contact.MailingCity;
+            this.mailingRegion = contact.MailingState;
+            this.mailingPostalCode = contact.MailingPostalCode;
+            this.mailingCountry = contact.MailingCountry;
         }
     }
     
@@ -30,8 +31,8 @@ public with sharing class ContactWrapper{
         public String PhoneType;
         public String PhoneNumber;
         
-        public Phone(String phoneType,String phoneNumber) {
-            this.PhoneType = phoneType;
+        public Phone(String phoneNumber) {
+            this.PhoneType = 'MOBILE';
             this.PhoneNumber = phoneNumber;
         }  
     }
@@ -42,9 +43,9 @@ public with sharing class ContactWrapper{
         this.LastName = record.LastName;
         this.EmailAddress = record.Email;
         this.Phones = new List<Phone>();
-        this.Phones.add(new Phone('MOBILE',record.Phone));
+        this.Phones.add(new Phone(record.Phone));
         this.Addresses = new List<Address>();
-        this.Addresses.add(new Address(record,'STREET'));
+        this.Addresses.add(new Address(record)); 
         }
     
 }

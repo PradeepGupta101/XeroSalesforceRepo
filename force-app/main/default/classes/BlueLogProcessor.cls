@@ -68,7 +68,14 @@ global without sharing class BlueLogProcessor {
         }
         public void debug(String message, String classMethod, String ctxId){
             asyncLog(message, classMethod, LoggingLevel.DEBUG, ctxId);
+        }/*
+        public void error(String message, String classMethod){
+            error(message, classMethod, null);            
         }
+        public void error(String message, String classMethod, String ctxId){
+            asyncLog(message, classMethod, LoggingLevel.ERROR, ctxId);            
+        }
+*/
           
         //All exceptions to be logged as errors 
         public void error(Exception ex, String classMethod){
