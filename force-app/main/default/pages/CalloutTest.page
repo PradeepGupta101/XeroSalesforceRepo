@@ -1,0 +1,15 @@
+<apex:page controller="XeroContinuation">
+
+     <apex:form >
+
+         <apex:commandButton action="{!startRequest}" title="Click For Callout" rerender="out"/>
+
+    </apex:form>
+
+    <apex:outputLabel id="out">
+
+         {!responseData}
+
+     </apex:outputLabel>
+
+</apex:page>
